@@ -1,0 +1,69 @@
+{
+  "info": {
+    "_postman_id": "c6b77e65-508c-41cf-a1ad-b3e8831b2844",
+    "name": "CampusLibrary API",
+    "description": "Capstone API examples. Sign in to obtain the access token and let the test script save it to the collection variable. The refresh token is an HTTP-only cookie handled by Postman.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5002/api" },
+    { "key": "accessToken", "value": "" },
+    { "key": "bookId", "value": "" },
+    { "key": "studentId", "value": "" },
+    { "key": "issueId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        { "name": "API health", "request": { "method": "GET", "url": "{{baseUrl}}/health" } }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register student",
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Aanya Sharma\",\n  \"email\": \"aanya@example.edu\",\n  \"password\": \"change-this-password\"\n}" }, "url": "{{baseUrl}}/auth/register" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["if (pm.response.code === 201) {", "  const body = pm.response.json();", "  pm.collectionVariables.set('accessToken', body.accessToken);", "  pm.collectionVariables.set('studentId', body.user.id);", "}"] } }]
+        },
+        {
+          "name": "Login",
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"replace-with-seeded-admin-password\"\n}" }, "url": "{{baseUrl}}/auth/login" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["if (pm.response.code === 200) {", "  const body = pm.response.json();", "  pm.collectionVariables.set('accessToken', body.accessToken);", "  if (body.user.role === 'student') pm.collectionVariables.set('studentId', body.user.id);", "}"] } }]
+        },
+        { "name": "Refresh session", "request": { "method": "POST", "url": "{{baseUrl}}/auth/refresh" } },
+        { "name": "Current user", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/auth/me" } },
+        { "name": "Logout", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/auth/logout" } }
+      ]
+    },
+    {
+      "name": "Books",
+      "item": [
+        { "name": "Search books", "request": { "method": "GET", "url": "{{baseUrl}}/books?page=1&limit=12&search=biology&available=true" } },
+        { "name": "Get book by ID", "request": { "method": "GET", "url": "{{baseUrl}}/books/{{bookId}}" } },
+        {
+          "name": "Create book (librarian/admin)",
+          "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"title\": \"The Living Planet\",\n  \"author\": \"M. Rao\",\n  \"category\": \"Science\",\n  \"isbn\": \"9780000000001\",\n  \"description\": \"An introduction to ecology.\",\n  \"totalCopies\": 4\n}" }, "url": "{{baseUrl}}/books" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["if (pm.response.code === 201) pm.collectionVariables.set('bookId', pm.response.json().book._id);"] } }]
+        },
+        { "name": "Update book (librarian/admin)", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"description\": \"Updated book description.\"\n}" }, "url": "{{baseUrl}}/books/{{bookId}}" } },
+        { "name": "Delete book (librarian/admin)", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/books/{{bookId}}" } }
+      ]
+    },
+    {
+      "name": "Loans and reports",
+      "item": [
+        { "name": "List my active loans", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/issues?status=active" } },
+        { "name": "List students (librarian/admin)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/issues/students" } },
+        {
+          "name": "Issue book (librarian/admin)",
+          "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"bookId\": \"{{bookId}}\",\n  \"dueDate\": \"2026-12-10T00:00:00.000Z\"\n}" }, "url": "{{baseUrl}}/issues" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["if (pm.response.code === 201) pm.collectionVariables.set('issueId', pm.response.json().issue._id);"] } }]
+        },
+        { "name": "Return book (owner or staff)", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/issues/{{issueId}}/return" } },
+        { "name": "Reports (librarian/admin)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/issues/reports/summary" } }
+      ]
+    }
+  ]
+}
