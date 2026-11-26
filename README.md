@@ -1,5 +1,7 @@
 # CampusLibrary
 
+Capstone project in the `WEB-DEV-CAPSTONE` repository.
+
 CampusLibrary is a MERN library management system for the capstone assignment. Students can browse the catalogue and track loans; librarians and admins manage books, issue and receive returns, and review circulation reports.
 
 ## Features
