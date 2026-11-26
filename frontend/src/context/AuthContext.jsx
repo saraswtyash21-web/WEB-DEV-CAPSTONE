@@ -7,7 +7,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     let alive = true;
-    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/refresh`, { method: 'POST', credentials: 'include' })
+    fetch(`${import.meta.env.VITE_API_URL || '/api'}/auth/refresh`, { method: 'POST', credentials: 'include' })
       .then(async (response) => { if (!response.ok) return null; return response.json(); })
       .then((data) => { if (alive && data) { setAccessToken(data.accessToken); setUser(data.user); } })
       .catch(() => {})
